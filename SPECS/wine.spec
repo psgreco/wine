@@ -21,7 +21,7 @@
 
 Name:           wine
 Version:        4.0.2
-Release:        1%{?dist}
+Release:        1%{?dist}.1.32b
 Summary:        A compatibility layer for windows applications
 
 Group:          Applications/Emulators
@@ -148,7 +148,15 @@ BuildRequires:  gstreamer1-devel
 BuildRequires:  gstreamer1-plugins-base-devel
 BuildRequires:  mpg123-devel
 BuildRequires:  SDL2-devel
+%global use_libvkd3d 1
+%if 0%{?rhel} == 7
+%ifarch %{ix86}
+%global use_libvkd3d 0
+%endif
+%endif
+%if %{use_libvkd3d}
 BuildRequires:  libvkd3d-devel
+%endif
 BuildRequires:  vulkan-devel
 
 # Silverlight DRM-stuff needs XATTR enabled.
@@ -169,14 +177,14 @@ Requires:       wine-fonts = %{version}-%{release}
 
 # x86-32 parts
 %ifarch %{ix86} x86_64
-%if 0%{?fedora} || 0%{?rhel} <= 6
+%if 0%{?fedora} || 0%{?rhel} <= 8
 Requires:       wine-core(x86-32) = %{version}-%{release}
 Requires:       wine-capi(x86-32) = %{version}-%{release}
 Requires:       wine-cms(x86-32) = %{version}-%{release}
 Requires:       wine-ldap(x86-32) = %{version}-%{release}
 Requires:       wine-twain(x86-32) = %{version}-%{release}
 Requires:       wine-pulseaudio(x86-32) = %{version}-%{release}
-%if 0%{?fedora} >= 10 || 0%{?rhel} == 6
+%if 0%{?fedora} >= 10 || 0%{?rhel} >= 6
 Requires:       wine-openal(x86-32) = %{version}-%{release}
 %endif
 %if 0%{?fedora}
@@ -700,6 +708,13 @@ sed -i -e 's!^loader server: libs/port libs/wine tools.*!& include!' Makefile.in
 # http://bugs.winehq.org/show_bug.cgi?id=24606
 # http://bugs.winehq.org/show_bug.cgi?id=25073
 export CFLAGS="`echo $RPM_OPT_FLAGS | sed -e 's/-Wp,-D_FORTIFY_SOURCE=2//'` -Wno-error"
+
+#Cross compile on rhel 7
+%if 0%{?rhel} >= 7
+%ifarch %{ix86}
+sed -i '/winegcc/s/-o /-m32 &/' tools/makedep.c
+%endif
+%endif
 
 %configure \
  --sysconfdir=%{_sysconfdir}/wine \
@@ -1436,7 +1451,9 @@ fi
 %{_libdir}/wine/d3d10_1.dll.so
 %{_libdir}/wine/d3d10core.dll.so
 %{_libdir}/wine/d3d11.dll.so
+%if %{use_libvkd3d}
 %{_libdir}/wine/d3d12.dll.so
+%endif
 %{_libdir}/wine/d3dcompiler_*.dll.so
 %{_libdir}/wine/d3dim.dll.so
 %{_libdir}/wine/d3drm.dll.so
