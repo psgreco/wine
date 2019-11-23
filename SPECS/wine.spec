@@ -21,7 +21,7 @@
 
 Name:           wine
 Version:        4.0.2
-Release:        1%{?dist}.1.32b
+Release:        2%{?dist}.1.32b
 Summary:        A compatibility layer for windows applications
 
 Group:          Applications/Emulators
