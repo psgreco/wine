@@ -179,6 +179,9 @@ Requires:       wine-fonts = %{version}-%{release}
 %ifarch %{ix86} x86_64
 %if 0%{?fedora} || 0%{?rhel} <= 8
 Requires:       wine-core(x86-32) = %{version}-%{release}
+%if 0%{?rhel} < 8
+Requires:       wine-capi(x86-32) = %{version}-%{release}
+%endif
 Requires:       wine-cms(x86-32) = %{version}-%{release}
 Requires:       wine-ldap(x86-32) = %{version}-%{release}
 Requires:       wine-twain(x86-32) = %{version}-%{release}
@@ -202,6 +205,9 @@ Requires:       mesa-dri-drivers(x86-32)
 # x86-64 parts
 %ifarch x86_64
 Requires:       wine-core(x86-64) = %{version}-%{release}
+%if 0%{?rhel} < 8
+Requires:       wine-capi(x86-64) = %{version}-%{release}
+%endif
 Requires:       wine-cms(x86-64) = %{version}-%{release}
 Requires:       wine-ldap(x86-64) = %{version}-%{release}
 Requires:       wine-twain(x86-64) = %{version}-%{release}
@@ -222,6 +228,9 @@ Requires:       mesa-dri-drivers(x86-64)
 # ARM parts
 %ifarch %{arm} aarch64
 Requires:       wine-core = %{version}-%{release}
+%if 0%{?rhel} < 8
+Requires:       wine-capi = %{version}-%{release}
+%endif
 Requires:       wine-cms = %{version}-%{release}
 Requires:       wine-ldap = %{version}-%{release}
 Requires:       wine-twain = %{version}-%{release}
@@ -237,6 +246,9 @@ Requires:       samba-winbind-clients
 # aarch64 parts
 %ifarch aarch64
 Requires:       wine-core(aarch-64) = %{version}-%{release}
+%if 0%{?rhel} < 8
+Requires:       wine-capi(aarch-64) = %{version}-%{release}
+%endif
 Requires:       wine-cms(aarch-64) = %{version}-%{release}
 Requires:       wine-ldap(aarch-64) = %{version}-%{release}
 Requires:       wine-twain(aarch-64) = %{version}-%{release}
@@ -620,6 +632,25 @@ Requires: sane-backends-libs
 %description twain
 Twain support for wine
 
+%if 0%{?rhel} < 8
+%package capi
+Summary: ISDN support for wine
+Group: System Environment/Libraries
+Requires: wine-core = %{version}-%{release}
+%ifarch x86_64
+Requires:       isdn4k-utils(x86-64)
+%endif
+%ifarch %{ix86}
+Requires:       isdn4k-utils(x86-32)
+%endif
+%ifarch %{arm} aarch64
+Requires:       isdn4k-utils
+%endif
+
+%description capi
+ISDN support for wine
+%endif
+
 %package devel
 Summary: Wine development environment
 Group: System Environment/Libraries
@@ -939,8 +970,10 @@ install -p -m 0644 loader/wine.fr.UTF-8.man %{buildroot}%{_mandir}/fr.UTF-8/man1
 mkdir -p %{buildroot}%{_mandir}/pl.UTF-8/man1
 install -p -m 0644 loader/wine.pl.UTF-8.man %{buildroot}%{_mandir}/pl.UTF-8/man1/wine.1
 
+%if 0%{?rhel} >= 8
 # remove capi support
 rm -f %{buildroot}/%{_libdir}/wine/capi2032.dll.so
+%endif
 
 
 %if 0%{?rhel} == 6
@@ -1026,6 +1059,11 @@ fi
 
 %post twain -p /sbin/ldconfig
 %postun twain -p /sbin/ldconfig
+
+%if 0%{?rhel} < 8
+%post capi -p /sbin/ldconfig
+%postun capi -p /sbin/ldconfig
+%endif
 
 %post alsa -p /sbin/ldconfig
 %postun alsa -p /sbin/ldconfig
@@ -2157,6 +2195,12 @@ fi
 %files twain
 %{_libdir}/wine/twain_32.dll.so
 %{_libdir}/wine/sane.ds.so
+
+%if 0%{?rhel} < 8
+# capi subpackage
+%files capi
+%{_libdir}/wine/capi2032.dll.so
+%endif
 
 %files devel
 %{_bindir}/function_grep.pl
